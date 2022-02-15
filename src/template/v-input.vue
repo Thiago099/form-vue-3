@@ -1,5 +1,6 @@
 <template>
 <div>
+    <div v-if="visible">        
     <label 
         v-if="title!=''" 
         for="input"
@@ -132,6 +133,7 @@
         </div>
     <div class="erro-message" v-if="erro != ''">{{ erro }}</div>
     <div v-else class="erro-placeholder">A</div>
+    </div>
 </div>
 
 </template>
@@ -161,6 +163,9 @@ export default {
         },
         setid:{
         },
+        visible:{
+            default: true
+        },
 
     },
 
@@ -183,7 +188,7 @@ export default {
         handleSwitch(key)
         {
             this.$emit('input', key == this.value ? null : key)
-            this.content = key
+            this.content = key == this.value ? null : key
             this.emitter.emit('input_data',{name:this.name, value:this.content})
         },
         addMultiselect()

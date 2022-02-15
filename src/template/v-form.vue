@@ -4,7 +4,7 @@
                 <div class="card-header"> {{ title }} </div>
                 <div class="card-body row">
                     <v-input 
-                    v-for="({name, classe, title, required, type, options, face, back, setid}) in data"
+                    v-for="({name, classe, title, required, type, options, face, back, setid, visibility}) in data"
                         :key="name"
                         :class="classe"
                         :title="title + ':' + (required ? ' *' : '') "
@@ -16,6 +16,7 @@
                         :back="back"
                         :setid="setid"
                         :erro="erro[name]"
+                        :visible="visible(visibility)"
                     />
                 </div>
         </div>
@@ -81,12 +82,20 @@ export default {
 
     methods:
     {
+        visible(visibility)
+        {
+            if(visibility == null)
+            {
+                return true
+            }
+            return visibility(this.form)
+        },
         submit(){
             var erro = false;
             this.fields.forEach(({data}) => {
-                data.forEach(({name, required, validation}) => {
+                data.forEach(({name, required, validation, visibility}) => {
                        
-                    if(required && (this.form[name] == undefined || this.form[name] == ''|| (Array.isArray(this.form[name]) && this.form[name].filter(item => item.excluir == false || item.excluir == undefined).length == 0)))
+                    if(required && (visibility == undefined || visibility(this.form)) && (this.form[name] == undefined || this.form[name] == ''|| (Array.isArray(this.form[name]) && this.form[name].filter(item => item.excluir == false || item.excluir == undefined).length == 0)))
                     {
                         erro = true
                         this.erro[name] = 'Este campo é obrigatório.'
@@ -146,6 +155,10 @@ export default {
 }
 .card-body{
     padding: 25px 40px 10px 40px;
+}
+.btn-blue{
+    color:white;
+    background-color: v-bind(color);
 }
 
 </style>

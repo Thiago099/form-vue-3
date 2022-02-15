@@ -5,9 +5,7 @@
             id="0" 
             data="Teste"
         /> -->
-        
         <v-table data="Teste" :fields="['nome',['descricao_estado','estado']]"></v-table>
-        <!-- <v-table class="col-12" :data="table_data"></v-table> -->
     </div>
 </template>
 <script>
@@ -37,6 +35,9 @@ export default {
                             type:"switch",
                             face:"name",
                             back:"value",
+                            visibility: form =>{
+                                return form.simnao == 1;
+                            },
                             options:[
                                 { 
                                     value: 1,
@@ -120,5 +121,7 @@ export default {
 </script>
 
 <style scoped>
-
+.title{
+    margin-top:40px;
+}
 </style>

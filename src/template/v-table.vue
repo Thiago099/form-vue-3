@@ -1,14 +1,16 @@
 <template>
 <div class="row">
         <div class="col-12" style="margin:20px 0 20px 0;">
+            
            <div v-html="display_search" class="phantom-input-overlay"></div>
             <input type="text" class="form-control input-sm phantom-input" v-model="search" @input="updateSearch()"/>
         </div>
+        
         <div v-if="empety">Nehum resultado encontrado</div>
         <table class="table table-borderless">
             <thead>
                 <tr>
-                    <th scope="col" v-for="title in Object.keys(display[0])" :key="title">
+                    <th scope="col" v-for="title in Object.keys(display_data[0])" :key="title">
                         <a @click="sortTable(title)" style="cursor:pointer">
                             {{title}}
                             <i
@@ -25,10 +27,61 @@
             <tbody>
                 <tr v-for="line in display" :key="line">
                     <td v-for="item in line" :key="item">{{ item }}</td>
-                   
                 </tr>
+                    <tr class="empety" v-for="index in (per_page-display.length)" :key="index">
+                        <td v-for="item in Object.keys(display_data[0])" :key="item">&nbsp;</td>
+                    </tr>
             </tbody>
         </table>
+        <div class="col-12 d-flex justify-content-center">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                    <li class="page-item">
+                        <a class="page-link" href="#" @click.prevent="prevPage()" :class="{'disabled':page == 1}">
+                            <span aria-hidden="true">
+                                <i class="fa fa-angle-left" aria-hidden="true"></i>
+                            </span>
+                        </a>
+                    </li>
+                    <li class="page-item" :key="index" v-if="display_pages[0] != 1">
+                        <a href="#" @click.prevent="setPage(1)" class="page-link" :class="{'btn-blue': page == 1}">
+                            1
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link disabled" href="#" v-if="display_pages[0] != 1 && display_pages[0] != 2">
+                            <span aria-hidden="true">
+                                ...
+                            </span>
+                        </a>
+                    </li>
+                    <li class="page-item" v-for="index in display_pages" :key="index">
+                        <a href="#" @click.prevent="setPage(index)" class="page-link" :class="{'btn-blue': page == index}">
+                            {{ index }}
+                        </a>
+                    </li>
+                    <li class="page-item" v-if="display_pages[display_pages.length-1] != pages && display_pages[display_pages.length-1] != pages-1">
+                        <a class="page-link disabled" href="#" >
+                            <span aria-hidden="true">
+                                ...
+                            </span>
+                        </a>
+                    </li>
+                    <li class="page-item" v-if="display_pages[display_pages.length-1] != pages">
+                        <a href="#" @click.prevent="setPage(pages)" class="page-link" :class="{'btn-blue': page == pages}">
+                            {{ pages }}
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" @click.prevent="nextPage()" :class="{'disabled':page == pages}">
+                            <span aria-hidden="true">
+                                <i class="fa fa-angle-right" aria-hidden="true"></i>
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
 </template>
 <script>
@@ -39,22 +92,94 @@ export default {
         data: {
         },
         fields:{},
+        per_page:{
+            type: Number,
+            default: 10
+        }
     },
     data(){
         return {
+            filtered: [{}],
             display: [{}],
             last_search:'',
-            display_search:[],
+            display_search:'',
             display_data:[{}],
             sort_column:'',
             sort_order:true,
             search:'',
             empety:true,
+            page:1,
+            pages:1,
+            page_display:15,
         }
     },
+    computed: {
+        display_pages(){
+            const result = []
+            let start;
+            let end;
+            if(this.page_display >= this.pages )
+            {
+                start = 1;
+                end = this.pages;
+            }
+            else
+            {
+                let leftpad = Math.ceil(this.page_display/2)
+                let rightpad = Math.ceil(this.page_display/2)
+                if(this.page - leftpad < 0)
+                {
+                    rightpad -= this.page - leftpad 
+                    leftpad = 1
+                }
+                else
+                {
+                    leftpad = this.page - leftpad + 1
+                }
+                if(this.page + rightpad > this.pages)
+                {
+                    leftpad -= this.page + rightpad - this.pages
+                    rightpad = this.pages
+                }
+                else
+                {
+                    rightpad = this.page + rightpad
+                }
+                start = leftpad
+                end = rightpad
+
+                if(start <= 1)
+                {
+                    end +=1
+                }
+                if(start <= 2)
+                {
+                    end +=1
+                }
+                if(end >= this.pages)
+                {
+                    start -= 1;
+                }
+                if(end >= this.pages-1)
+                {
+                    start -= 1;
+                }
+            }
+            for(let i = start; i <= end; i++){
+                result.push(i)
+            }
+            return result
+        },
+        
+    },
     methods:{
+        pad(index){
+            //replace pad by width
+
+            return index.toString().padStart(3, '0')
+        },
         updateSearch(){
-            const display = this.display_data.filter(item => {
+            const filtered = this.display_data.filter(item => {
                 for(let key in item)
                 {
                     if(item[key].toString().toLowerCase().includes(this.search.toLowerCase()))
@@ -64,9 +189,9 @@ export default {
                 }
                 return false;
             });
-            if(display.length != 0)
+            if(filtered.length != 0)
             {
-                this.display = display;
+                this.filtered = filtered;
                 this.last_search = this.search;
             }
             const search = this.search.search(this.last_search);
@@ -74,7 +199,7 @@ export default {
             {
                 this.display_search = `${this.last_search}<font color="red">${this.search.replace(this.last_search,'')}</font>`;
             }
-            else if(search > 0)
+            else if(search >= 0)
             {
                 const mid = this.search.split(this.last_search);
                 this.display_search = `<font color="red">${mid[0]}</font>${this.last_search}<font color="red">${mid[1]}</font>`;
@@ -84,7 +209,33 @@ export default {
             {
                 this.display_search = `<font color="red">${this.search}</font>`;
             }
-            
+            this.updatePagination()
+        },
+        setPage(page){
+            this.page = page;
+            this.updatePagination();
+        },
+        nextPage(){
+            this.page++;
+            this.updatePagination();
+        },
+        prevPage(){
+            this.page--;
+            this.updatePagination();
+        },
+        updatePagination(){
+            let comeco =
+				this.per_page * (this.page - 1)
+			let final =
+				this.per_page * this.page
+			if (comeco > this.filtered.length) {
+				this.page = 1
+				comeco =
+					this.per_page * (this.page - 1)
+				final = this.per_page * this.page
+			}
+            this.pages = Math.ceil(this.filtered.length / this.per_page)
+			this.display = this.filtered.slice(comeco, final)
         },
         sortTable(column){
             if(this.sort_column == column) 
@@ -163,9 +314,13 @@ export default {
         color:white;
     }
     
+    tr{
+        background-color: rgb(255, 255, 255);
+    }
     tr:nth-child(even){
-        background-color: #f5f4f4;
-    }.btn-blue{
+        background-color: #f7f5f5;
+    }
+    .btn-blue{
         color:white;
         background-color: v-bind(color);
     }
@@ -197,5 +352,19 @@ export default {
     }
     table tr td{
         border-top: 0;
+    }
+    .empety{
+        background-color: #ececec;
+    }
+    .empety:nth-child(even){
+        background-color: #e7e6e6;
+    }
+    .disabled{
+        pointer-events: none;
+    }
+    
+    .page-link{
+        width: 50px;
+        text-align: center;
     }
 </style>
