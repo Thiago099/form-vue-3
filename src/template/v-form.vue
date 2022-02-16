@@ -1,6 +1,7 @@
 <template>
     <div :key="responsividade">
-        <div v-for="({title, data}) in fields" :key="title" class="card" >
+        <div v-for="({title, data, visibility}) in fields" :key="title">
+            <div v-if="visible(visibility)" class="card">
                 <div class="card-header"> {{ title }} </div>
                 <div class="card-body row">
                     <v-input 
@@ -19,6 +20,7 @@
                         :visible="visible(visibility)"
                     />
                 </div>
+            </div>
         </div>
              
         <div class="col-sm-12" style="margin-bottom:100px; margin-top:20px">
@@ -92,37 +94,40 @@ export default {
         },
         submit(){
             var erro = false;
-            this.fields.forEach(({data}) => {
+            this.fields.forEach(({data, visibility}) => {
+                if(this.visible(visibility))
+                {
                 data.forEach(({name, required, validation, visibility}) => {
-                       
-                    if(required && (visibility == undefined || visibility(this.form)) && (this.form[name] == undefined || this.form[name] == ''|| (Array.isArray(this.form[name]) && this.form[name].filter(item => item.excluir == false || item.excluir == undefined).length == 0)))
-                    {
-                        erro = true
-                        this.erro[name] = 'Este campo é obrigatório.'
-                    }
-                    else
-                    {
-                        if(typeof validation !== 'undefined')
+                        if(required && this.visible(visibility) && (this.form[name] == undefined || this.form[name] == ''|| (Array.isArray(this.form[name]) && this.form[name].filter(item => item.excluir == false || item.excluir == undefined).length == 0)))
                         {
-                            const processed = validation(this.form[name])
-                            if(typeof processed != 'undefined')
+                            erro = true
+                            this.erro[name] = 'Este campo é obrigatório.'
+                        }
+                        else
+                        {
+                            if(typeof validation !== 'undefined')
                             {
-                                this.erro[name] = processed
-                                erro = true
+                                const processed = validation(this.form[name])
+                                if(typeof processed != 'undefined')
+                                {
+                                    this.erro[name] = processed
+                                    erro = true
+                                }
+                                else
+                                {
+                                    this.erro[name] = ''
+                                }
                             }
                             else
                             {
                                 this.erro[name] = ''
                             }
                         }
-                        else
-                        {
-                            this.erro[name] = ''
-                        }
                     }
-                })
-                
-            });
+                )
+                }
+            })
+
             this.responsividade++
             if(!erro)
             {

@@ -1,10 +1,16 @@
 <template>
 <div class="row">
-        <div class="col-12" style="margin:20px 0 20px 0;">
-            
-           <div v-html="display_search" class="phantom-input-overlay"></div>
-            <input type="text" class="form-control input-sm phantom-input" v-model="search" @input="updateSearch()"/>
-        </div>
+    <v-header :title="title" :subtitle="subtitle" :icon="icon" :content_align="search_bar_align">
+        <template v-slot:content="">
+            <div class="col-12" style="margin:20px 0 20px 0;">
+            <div v-html="display_search" class="phantom-input-overlay"></div>
+            <i aria-hidden="true" class="fa fa-search fa-fw search-icon"></i>
+            <input type="text" class="form-control input-sm phantom-input" v-model="search" @input="updateSearch()" placeholder="Digite para buscar"/>
+            </div>
+        </template>
+    </v-header>
+        
+        
         
         <div v-if="empety">Nehum resultado encontrado</div>
         <table class="table table-borderless">
@@ -94,8 +100,24 @@ export default {
         fields:{},
         per_page:{
             type: Number,
-            default: 10
-        }
+            default: 15
+        },
+        title: {
+            type: String,
+            default: 'Header'
+        },
+        subtitle: {
+            type: String,
+            default: 'Subtitle'
+        },
+        icon:{
+            type: String,
+            default: 'icon-sub icon-relatorios_sub_icone'
+        },
+        search_bar_align:{
+            type: Number,
+            default: 40
+        },
     },
     data(){
         return {
@@ -118,7 +140,7 @@ export default {
             const result = []
             let start;
             let end;
-            if(this.page_display >= this.pages )
+            if(this.page_display >= this.pages - 4 )
             {
                 start = 1;
                 end = this.pages;
@@ -173,11 +195,6 @@ export default {
         
     },
     methods:{
-        pad(index){
-            //replace pad by width
-
-            return index.toString().padStart(3, '0')
-        },
         updateSearch(){
             const filtered = this.display_data.filter(item => {
                 for(let key in item)
@@ -197,12 +214,12 @@ export default {
             const search = this.search.search(this.last_search);
             if(search == 0)
             {
-                this.display_search = `${this.last_search}<font color="red">${this.search.replace(this.last_search,'')}</font>`;
+                this.display_search = `<font color="black">${this.last_search}</font><font color="red">${this.search.replace(this.last_search,'')}</font>`;
             }
             else if(search >= 0)
             {
                 const mid = this.search.split(this.last_search);
-                this.display_search = `<font color="red">${mid[0]}</font>${this.last_search}<font color="red">${mid[1]}</font>`;
+                this.display_search = `<font color="red">${mid[0]}</font><font color="black">${this.last_search}</font><font color="red">${mid[1]}</font>`;
 
             }
             else
@@ -265,6 +282,7 @@ export default {
     created(){
         const process = result =>{
             this.display_data = result.map(line => {
+                this.empety = false;
                 let newLine = {};
                 for(let field of this.fields)
                 {
@@ -296,7 +314,6 @@ export default {
                     }
                     else
                     {
-                        this.empety = false;
                         process(result)
                     }
                 }
@@ -325,18 +342,29 @@ export default {
         background-color: v-bind(color);
     }
     .phantom-input-overlay{
-        pointer-events: none;position:absolute;margin-left:13px;margin-top:7px
+        pointer-events: none;
+        position:absolute;
+        margin-left:36px;
+        margin-top:7px
     }
     .phantom-input{
         color: transparent;
         caret-color: black;
+        padding-left: 35px;
+    }
+    .search-icon{
+        pointer-events: none;
+        position:absolute;
+        margin-left:10px;
+        margin-top:10px;
+        color:rgb(134, 134, 134);
     }
     
     table {
         border: 2px solid v-bind(color);
     }
     table td, table th {
-        border: none
+        border: none;
     }
 
 
