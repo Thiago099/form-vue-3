@@ -1,6 +1,11 @@
 <template>
 <div class="row">
-    <v-header :title="title" :subtitle="subtitle" :icon="icon" :content_align="search_bar_align">
+    <v-header 
+        :title="title" 
+        :subtitle="subtitle" 
+        :icon="icon" 
+        :content_align="search_bar_align"
+    >
         <template v-slot:content="">
             <div class="col-12" style="margin:20px 0 20px 0;">
             <div v-html="display_search" class="phantom-input-overlay"></div>
@@ -10,13 +15,11 @@
         </template>
     </v-header>
         
-        
-        
         <div v-if="empety">Nehum resultado encontrado</div>
         <table class="table table-borderless">
             <thead>
                 <tr>
-                    <th scope="col" v-for="title in Object.keys(display_data[0])" :key="title">
+                    <th scope="col" v-for="title in  header" :key="title">
                         <a @click="sortTable(title)" style="cursor:pointer">
                             {{title}}
                             <i
@@ -28,18 +31,29 @@
                             ></i>
                         </a>
                     </th>
+                    <th>
+                        
+                    </th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="line in display" :key="line">
-                    <td v-for="item in line" :key="item">{{ item }}</td>
+                    <td v-for="item in render_fields(line)" :key="item">{{ item }}</td>
+                    <td>
+                        <router-link 
+                        :to="{ name: $parent.$options.name+' editar', params: { id: line.id }}"
+                        >
+                            <i aria-hidden="true" class="fa icon-editar"></i>
+                        </router-link>
+                        <i aria-hidden="true" class="icon-lixeira" @click="excluir(line.id)"></i>
+                    </td>
                 </tr>
-                    <tr class="empety" v-for="index in (per_page-display.length)" :key="index">
-                        <td v-for="item in Object.keys(display_data[0])" :key="item">&nbsp;</td>
-                    </tr>
+                <tr class="empety" v-for="index in (per_page-display.length)" :key="index">
+                    <td v-for="item in Object.keys(data[0]).length-1" :key="item">&nbsp;</td>
+                </tr>
             </tbody>
         </table>
-        <div class="col-12 d-flex justify-content-center">
+        <div class="col-12 d-flex justify-content-center" v-if="display_data.length != 0">
             <nav aria-label="Page navigation example">
                 <ul class="pagination">
                     <li class="page-item">
@@ -126,6 +140,7 @@ export default {
             last_search:'',
             display_search:'',
             display_data:[{}],
+            idlist:[],
             sort_column:'',
             sort_order:true,
             search:'',
@@ -133,9 +148,11 @@ export default {
             page:1,
             pages:1,
             page_display:15,
+            header:[],
         }
     },
     computed: {
+        
         display_pages(){
             const result = []
             let start;
@@ -195,6 +212,11 @@ export default {
         
     },
     methods:{
+        render_fields(field){
+            const result = Object.assign({}, field);
+            delete result.id
+            return result
+        },
         updateSearch(){
             const filtered = this.display_data.filter(item => {
                 for(let key in item)
@@ -206,7 +228,7 @@ export default {
                 }
                 return false;
             });
-            if(filtered.length != 0)
+            if(filtered.length != 0 || this.display_data.length == 0)
             {
                 this.filtered = filtered;
                 this.last_search = this.search;
@@ -277,22 +299,44 @@ export default {
             })
             this.display = this.display_data;
             this.updateSearch();
-        }
+        },
+        excluir(id){
+            // this.axios(`/${this.$parent.$options.name}/excluir/${id}`, 'get', {
+            //     })
+            this.display_data.splice(this.display_data.findIndex(item => item.id == id), 1)
+            this.updateSearch()
+        },
     },
     created(){
         const process = result =>{
+            for(const field of this.fields)
+            {
+                 if(Array.isArray(field))
+                    {
+                        this.header.push(field[1].toUpperCase())
+                    }
+                    else
+                    {
+                        this.header.push(field.toUpperCase())
+
+                    }
+            }
             this.display_data = result.map(line => {
-                this.empety = false;
-                let newLine = {};
-                for(let field of this.fields)
+                this.empety = false
+                let newLine = {}
+                
+                newLine.id = line.id
+                for(const field of this.fields)
                 {
                     if(Array.isArray(field))
                     {
-                        newLine[field[1].toUpperCase()] = line[field[0]]
+                        const [value, key] = field;
+                        newLine[key.toUpperCase()] = line[value]
                     }
                     else
                     {
                         newLine[field.toUpperCase()] = line[field]
+
                     }
                 }
                 return newLine;
@@ -394,5 +438,17 @@ export default {
     .page-link{
         width: 50px;
         text-align: center;
+    }
+    td{
+         vertical-align: middle;
+    }
+    td i{
+        margin-left:10px;
+        font-size: 20pt;
+        color: v-bind(color);
+        cursor: pointer;
+    }
+    tr:hover:not(.empety){
+        background-color: #dbe4f1;
     }
 </style>

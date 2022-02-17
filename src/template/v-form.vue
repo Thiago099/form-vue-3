@@ -1,11 +1,19 @@
 <template>
-    <div :key="responsividade">
-        <div v-for="({title, data, visibility}) in fields" :key="title">
+    <div :key="responsividade" class="row">
+        <v-header 
+            :title="title" 
+            :subtitle="subtitle" 
+            :icon="icon" 
+            :content_align="0"
+            button="voltar"
+        >
+        </v-header>
+        <div v-for="({title, data, visibility}) in fields" :key="title" style="margin:0px;padding:0px">
             <div v-if="visible(visibility)" class="card">
                 <div class="card-header"> {{ title }} </div>
                 <div class="card-body row">
                     <v-input 
-                    v-for="({name, classe, title, required, type, options, face, back, setid, visibility}) in data"
+                    v-for="({name, classe, title, required, type, options, face, back, setid, visibility, phantom}) in data"
                         :key="name"
                         :class="classe"
                         :title="title + ':' + (required ? ' *' : '') "
@@ -18,6 +26,7 @@
                         :setid="setid"
                         :erro="erro[name]"
                         :visible="visible(visibility)"
+                        :phantom="phantom"
                     />
                 </div>
             </div>
@@ -44,7 +53,17 @@ export default {
             type: String,
             default: ''
         },
-        id:{
+        title: {
+            type: String,
+            default: 'Header'
+        },
+        subtitle: {
+            type: String,
+            default: 'Subtitle'
+        },
+        icon:{
+            type: String,
+            default: 'icon-sub icon-relatorios_sub_icone'
         },
     },
     data(){
@@ -56,21 +75,28 @@ export default {
         }
     },
     mounted(){
-
-        if(this.id != 0)
+        if(this.$route.params.id != undefined)
         {
-            this.axios(`/${this.data}/listar/${this.id}`, 'get', {
-                callback: (result) => {
-                    this.form = result;
-                }
-            })
-            
+            if(Array.isArray(this.data)){
+                this.form = this.data.find(item => item.id == this.$route.params.id)
+            }
+            else
+            {
+                this.axios(`/${this.data}/listar/${this.$route.params.id}`, 'get', {
+                    callback: (result) => {
+                        this.form = result;
+                    }
+                })
+            }
         }
         else
         {
             this.form = this.fields.reduce((acc, field) => {
                 field.data.forEach(input => {
-                    acc[input.name] = input.default
+                    if(input.type != 'placeholder')
+                    {
+                        acc[input.name] = input.default
+                    }
                 })
                 return acc
             }, {})
@@ -143,7 +169,7 @@ export default {
 </script>
 <style scoped>
 .card{
-    margin-top:20px;
+    margin-bottom:20px;
     padding: 0px;
 }
 .btn{

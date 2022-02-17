@@ -1,13 +1,25 @@
 <template>
     <div class="container">
-        <router-view />
+        <router-view style="margin-bottom:50px" />
         <div id="nav" class="text-center p-3 footer">
-            <router-link to="/">Form</router-link> |
-            <router-link to="/table">Table</router-link>
+            <div v-for="route in routes" :key="route.path" style="display:inline">
+                <router-link  :to="route.path.replace(':id','1')">{{ route.name }}</router-link> <span v-if="route != routes[routes.length - 1]"> | </span>
+            </div>
+            
         </div>
+        {{ routs }}
     </div>
 </template>
 <script>
+import router from './global/router'
+export default {
+    name: 'App',
+    data(){
+        return{
+            routes:router.options.routes
+        }
+    }
+}
 </script>
 
 <style scoped>

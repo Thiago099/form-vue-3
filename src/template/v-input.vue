@@ -1,6 +1,6 @@
 <template>
-<div>
-    <div v-if="visible">        
+<div v-if="visible || !phantom">
+    <div v-if="visible && type !== 'placeholder'">        
     <label 
         v-if="title!=''" 
         for="input"
@@ -11,6 +11,13 @@
         >
             <input v-if="type === 'text'"
                 type="text" 
+                class="form-control input-sm" 
+                :class="erro != '' ? 'erro-input' : ''"
+                @input="handleBaisc"
+                :value="value"
+            />
+            <input v-else-if="type === 'password'"
+                type="password" 
                 class="form-control input-sm" 
                 :class="erro != '' ? 'erro-input' : ''"
                 @input="handleBaisc"
@@ -71,54 +78,54 @@
                 class="input-group"
                 v-else-if="type === 'multiselect'"
             >
-            <div class="d-flex flex-no-wrap">
-                <div>
-                    <select
-                        class="form-select input-sm" 
-                        :class="erro != '' ? 'erro-input' : ''"
-                        ref="option"
-                        style="height:38px;"
-                    >
-                    <option value=""></option>
-                    <option 
-                        
-                        v-for="([option, key]) in list_options"
-                        :key="option"
-                        :value="key"
-                    >
-                    {{ option }}</option>
-             </select>
-                </div>
-                <div class="input-group-btn">
-                <button
-                    class="btn btn-blue"
-                    :class="erro != '' ? 'erro-input' : ''"
-                    style="border-radius:0px 5px 5px 0px;width:85px;"
-                    type="button"
-                    @click="addMultiselect"
-                >
-                    ADD <i class="fa fa-arrow-right fa-fw"></i>
-                </button>
-                </div>
-                </div>
-                    <div class="col-6">
-                        <div  v-if="Array.isArray(content)">
-                        <span
-                            v-for="(item, idx) in content.filter(item => item.excluir != true)"
-                            :key="idx"
-                            style="margin-top: 3px"
+                <div class="d-flex flex-no-wrap">
+                    <div>
+                        <select
+                            class="form-select input-sm" 
+                            :class="erro != '' ? 'erro-input' : ''"
+                            ref="option"
+                            style="height:38px;"
                         >
-                            <span
-                                title="Clique para remover"
-                                class="label"
-                                @click="removeMultiselect(item)"
-                            >
-                                {{ item[face] }}
-                                <i class="fa fa-times no-print"></i>
-                            </span>
-                        </span>
-                        </div>
+                        <option value=""></option>
+                        <option 
+                            
+                            v-for="([option, key]) in list_options"
+                            :key="option"
+                            :value="key"
+                        >
+                        {{ option }}</option>
+                </select>
                     </div>
+                    <div class="input-group-btn">
+                    <button
+                        class="btn btn-blue"
+                        :class="erro != '' ? 'erro-input' : ''"
+                        style="border-radius:0px 5px 5px 0px;width:85px;"
+                        type="button"
+                        @click="addMultiselect"
+                    >
+                        ADD <i class="fa fa-arrow-right fa-fw"></i>
+                    </button>
+                    </div>
+                    </div>
+                        <div class="col-6">
+                            <div  v-if="Array.isArray(content)">
+                            <span
+                                v-for="(item, idx) in content.filter(item => item.excluir != true)"
+                                :key="idx"
+                                style="margin-top: 3px"
+                            >
+                                <span
+                                    title="Clique para remover"
+                                    class="label"
+                                    @click="removeMultiselect(item)"
+                                >
+                                    {{ item[face] }}
+                                    <i class="fa fa-times no-print"></i>
+                                </span>
+                            </span>
+                            </div>
+                        </div>
                 </div>
             <!-- <div v-else-if="type === 'check'">
                 <div class="form-check" v-for="([option, key]) in list_options" :key="key">
@@ -168,6 +175,9 @@ export default {
         setid:{
         },
         visible:{
+            default: true
+        },
+        phantom:{
             default: true
         },
 
